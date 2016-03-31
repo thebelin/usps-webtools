@@ -128,6 +128,49 @@ usps.prototype.cityStateLookup = function(zip, callback) {
 };
 
 /**
+  V4 Rate Request
+
+  @param {String} fromZip Zipcode origin
+  @param {String} toZip   Zipcode origin
+  @param {number} weight  The weight in oz being sent
+  @param {String} service The USPS service to use (Defaults as STANDARD POST)
+  
+  @param {Function} callback The callback function
+  @returns {Object} instance of module
+*/
+usps.prototype.RateV4Request = function(fromZip, toZip, weight, service, callback) {
+  // The weight in oz for the request
+  var ozWeight = parseInt(weight, 10) || 0,
+  
+  // The weight in lbs for the request
+    lbsWeight = ozWeight / 16;
+
+  // The compiled data for the request
+    obj = {
+      ID: 0,
+      Service: service || "STANDARD POST",
+      ZipOrigination: fromZip,
+      ZipDestination: toZip,
+      Pounds: lbsWeight,
+      Ounces: ozWeight,
+      Container: '',
+      Size: 'REGULAR',
+      SpecialServices: {
+        SpecialService: 106 // Add tracking
+      }
+  };
+
+  callUSPS('RateV4', 'RateV4Request', 'RateV4Response', this.config, obj, function(err, data) {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    callback(err, data);
+  });
+};
+
+/**
   Method to call USPS
 */
 function callUSPS(api, method, resultDotNotation, config, params, callback) {
